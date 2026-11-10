@@ -46,3 +46,162 @@ flowchart LR
 
     subgraph System[Автодетейлинг қосымшасы]
         UC1(Тіркелу / кіру)
+        UC2(Қызмет түрін таңдау)
+        UC3(Орналасқан жерді картадан көрсету)
+        UC4(Күн мен уақытты таңдау)
+        UC5(Тапсырыс беру)
+        UC6(Тапсырыс мәртебесін қадағалау)
+        UC7(Төлем жасау)
+        UC8(Баға беру)
+        UC9(Тапсырысты қабылдау / қабылдамау)
+        UC10(Тапсырыс мәртебесін жаңарту)
+        UC11(Қызметтер мен бағаларды басқару)
+        UC12(Детейлерді басқару)
+    end
+
+    Client --- UC1
+    Client --- UC5
+    Client --- UC6
+    Client --- UC7
+    Client --- UC8
+    UC5 -. include .-> UC2
+    UC5 -. include .-> UC3
+    UC5 -. include .-> UC4
+
+    Detailer --- UC1
+    Detailer --- UC9
+    Detailer --- UC10
+
+    Admin --- UC1
+    Admin --- UC11
+    Admin --- UC12
+```
+
+### 2. Class
+
+```mermaid
+classDiagram
+    class User {
+        +int id
+        +string name
+        +string phone
+        +string email
+        +string password
+        +login()
+        +register()
+    }
+    class Client {
+        +List~Car~ cars
+        +createOrder()
+        +trackOrder()
+        +pay()
+        +rate()
+    }
+    class Detailer {
+        +float rating
+        +bool isAvailable
+        +acceptOrder()
+        +rejectOrder()
+        +updateStatus()
+    }
+    class Admin {
+        +manageServices()
+        +manageDetailers()
+        +viewOrders()
+    }
+    class Car {
+        +int id
+        +string brand
+        +string model
+        +string plateNumber
+    }
+    class Service {
+        +int id
+        +string name
+        +string description
+        +float price
+        +int duration
+    }
+    class Order {
+        +int id
+        +DateTime dateTime
+        +string status
+        +float totalPrice
+        +calculatePrice()
+        +changeStatus()
+    }
+    class Location {
+        +double latitude
+        +double longitude
+        +string address
+    }
+    class Payment {
+        +int id
+        +float amount
+        +string method
+        +string status
+        +process()
+    }
+    class Review {
+        +int id
+        +int rating
+        +string comment
+    }
+
+    User <|-- Client
+    User <|-- Detailer
+    User <|-- Admin
+    Client "1" --> "*" Car
+    Client "1" --> "*" Order
+    Detailer "1" --> "*" Order
+    Order "*" --> "1..*" Service
+    Order "1" --> "1" Location
+    Order "1" --> "1" Payment
+    Order "1" --> "0..1" Review
+    Order "*" --> "1" Car
+```
+
+### 3. Activity: Автодетейлингке тапсырыс беру
+
+![Activity диаграммасы](activity.png)
+
+### 4. Sequence: Автодетейлингке тапсырыс беру
+
+```mermaid
+sequenceDiagram
+    actor C as Клиент
+    participant App as Мобильді қосымша
+    participant S as Сервер
+    participant M as Карта сервисі
+    participant DB as Дерекқор
+    actor D as Детейлер
+
+    C->>App: Қызмет түрін таңдау
+    App->>S: Қызметтер тізімін сұрау
+    S->>DB: Қызметтерді алу
+    DB-->>S: Қызметтер тізімі
+    S-->>App: Қызметтер тізімі
+    App-->>C: Қызметтерді көрсету
+
+    C->>App: Орналасқан жерді көрсету
+    App->>M: Координаталарды алу
+    M-->>App: Мекенжай мен карта
+    App-->>C: Картада орынды көрсету
+
+    C->>App: Күн мен уақытты таңдап, растау
+    App->>S: Тапсырыс жасау (қызмет, орын, уақыт)
+    S->>DB: Тапсырысты сақтау
+    S->>D: Жаңа тапсырыс туралы хабарлама
+
+    alt Детейлер қабылдады
+        D->>S: Тапсырысты қабылдау
+        S->>DB: Мәртебені жаңарту (қабылданды)
+        S-->>App: Тапсырыс қабылданды
+        App-->>C: Детейлер жолда
+    else Детейлер қабылдамады
+        D->>S: Тапсырыстан бас тарту
+        S->>S: Басқа детейлерді іздеу
+        S-->>App: Жаңа детейлер табылды / табылмады
+        App-->>C: Мәртебе туралы хабарлама
+    end
+```
